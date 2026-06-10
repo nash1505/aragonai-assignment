@@ -45,23 +45,29 @@ export const HomePage = () => {
   // Sync global progress to active uploading queue items
   useEffect(() => {
     if (isUploadHookLoading) {
-      setUploadingQueue((prevQueue) =>
-        prevQueue.map((item) => {
-          if (item.status === "uploading") {
-            return { ...item, progress: uploadProgress };
-          }
-          return item;
-        })
-      );
+      const timer = setTimeout(() => {
+        setUploadingQueue((prevQueue) =>
+          prevQueue.map((item) => {
+            if (item.status === "uploading") {
+              return { ...item, progress: uploadProgress };
+            }
+            return item;
+          })
+        );
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [uploadProgress, isUploadHookLoading]);
 
   // Clear errors when the queue is empty
   useEffect(() => {
     if (uploadingQueue.length === 0) {
-      setGlobalError(null);
-      uploadReset();
-      deleteReset();
+      const timer = setTimeout(() => {
+        setGlobalError(null);
+        uploadReset();
+        deleteReset();
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [uploadingQueue, uploadReset, deleteReset]);
 
@@ -162,9 +168,9 @@ export const HomePage = () => {
 
       // Refetch the images grid to load the newly uploaded items
       await refetch();
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Network error or entire batch request failed
-      const errMsg = err?.message || "Connection error. Upload failed.";
+      const errMsg = (err as { message?: string })?.message || "Connection error. Upload failed.";
       
       setUploadingQueue((prevQueue) =>
         prevQueue.map((item) => {
@@ -236,8 +242,8 @@ export const HomePage = () => {
       }
 
       await refetch();
-    } catch (err: any) {
-      const errMsg = err?.message || "Upload failed.";
+    } catch (err: unknown) {
+      const errMsg = (err as { message?: string })?.message || "Upload failed.";
       setUploadingQueue((prevQueue) =>
         prevQueue.map((item) => (item.id === id ? { ...item, status: "failed", error: errMsg } : item))
       );
@@ -288,8 +294,8 @@ export const HomePage = () => {
     try {
       await deleteImage(id);
       await refetch();
-    } catch (err: any) {
-      setGlobalError(err?.message || "Failed to delete the image.");
+    } catch (err: unknown) {
+      setGlobalError((err as { message?: string })?.message || "Failed to delete the image.");
     } finally {
       setDeletingIds((prev) => {
         const next = new Set(prev);

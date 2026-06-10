@@ -48,7 +48,6 @@ export class ProcessorService {
         image.originalName.toLowerCase().endsWith(".heif");
 
       let processedBuffer: Buffer;
-      let targetMimeType = image.mimeType;
 
       if (isHeic) {
         console.log(`[Processor] HEIC format detected. Converting to JPEG...`);
@@ -60,7 +59,6 @@ export class ProcessorService {
             quality: 0.9,
           })
         );
-        targetMimeType = "image/jpeg";
       } else {
         processedBuffer = fileBuffer;
       }

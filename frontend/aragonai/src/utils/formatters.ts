@@ -23,7 +23,11 @@ export function formatBytes(bytes: number, decimals = 1): string {
  */
 export function formatDate(dateString: string): string {
   try {
-    return new Date(dateString).toLocaleDateString(undefined, {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return dateString;
+    }
+    return date.toLocaleDateString(undefined, {
       year: "numeric",
       month: "short",
       day: "numeric",

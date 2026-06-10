@@ -30,7 +30,7 @@ function createApiError(
  * Parses an HTTP response into a typed result or throws an ApiError.
  */
 async function parseResponse<T>(response: Response): Promise<T> {
-  let body: any;
+  let body: unknown;
   try {
     body = await response.json();
   } catch {
@@ -42,10 +42,11 @@ async function parseResponse<T>(response: Response): Promise<T> {
   }
 
   if (!response.ok) {
+    const errorBody = body as { error?: string; message?: string; details?: ApiError["details"] } | undefined;
     throw createApiError(
-      body?.error || body?.message || `Request failed with status ${response.status}`,
+      errorBody?.error || errorBody?.message || `Request failed with status ${response.status}`,
       response.status,
-      body?.details
+      errorBody?.details
     );
   }
 
@@ -172,7 +173,7 @@ export function uploadFiles(
 
     // Success handler
     xhr.addEventListener("load", () => {
-      let body: any;
+      let body: unknown;
       try {
         body = JSON.parse(xhr.responseText);
       } catch {
@@ -183,11 +184,12 @@ export function uploadFiles(
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve(body as UploadResponse);
       } else {
+        const errorBody = body as { error?: string; details?: ApiError["details"] } | undefined;
         reject(
           createApiError(
-            body?.error || `Upload failed with status ${xhr.status}`,
+            errorBody?.error || `Upload failed with status ${xhr.status}`,
             xhr.status,
-            body?.details
+            errorBody?.details
           )
         );
       }

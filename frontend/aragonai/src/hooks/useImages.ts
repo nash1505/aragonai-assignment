@@ -16,7 +16,9 @@ export function useImages(): UseImagesReturn {
 
   // Keep track of the current cursor to prevent race conditions during pagination
   const nextCursorRef = useRef<string | null>(null);
-  nextCursorRef.current = nextCursor;
+  useEffect(() => {
+    nextCursorRef.current = nextCursor;
+  }, [nextCursor]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -61,7 +63,7 @@ export function useImages(): UseImagesReturn {
         return;
       }
       if (err && typeof err === "object" && "message" in err) {
-        if ((err as any).message === "Request was cancelled.") {
+        if ((err as { message?: string }).message === "Request was cancelled.") {
           return;
         }
       }
@@ -117,7 +119,10 @@ export function useImages(): UseImagesReturn {
 
   // Initial fetch on mount
   useEffect(() => {
-    fetchInitialImages(true);
+    const timer = setTimeout(() => {
+      fetchInitialImages(true);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchInitialImages]);
 
   // Auto-polling effect: If there are PENDING or PROCESSING images, poll the backend

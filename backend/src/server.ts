@@ -39,7 +39,7 @@ app.use(
 );
 
 // Health check endpoint
-app.get("/health", (req: Request, res: Response) => {
+app.get("/health", (_req: Request, res: Response) => {
   res.json({ status: "OK", time: new Date() });
 });
 
@@ -47,7 +47,7 @@ app.get("/health", (req: Request, res: Response) => {
 app.use("/api/images", imageRoutes);
 
 // 4. Global Error Handler Middleware
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
   console.error("Uncaught Server Error:", err);
   
   // Clean up multer temporary file if an error occurred during request pipeline
