@@ -8,7 +8,8 @@
  */
 
 // --- API & Routing Config ---
-export const API_BASE_URL = "http://localhost:3001";
+export const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+export const APP_URL = import.meta.env.VITE_APP_URL;
 export const API_ROUTES = {
   UPLOAD: "/api/images/upload",
   IMAGES: "/api/images",
