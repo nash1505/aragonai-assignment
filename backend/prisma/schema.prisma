@@ -1,0 +1,31 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum ProcessingStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model Image {
+  id            String           @id @default(uuid())
+  originalName  String
+  mimeType      String
+  size          Int
+  status        ProcessingStatus @default(PENDING)
+  originalUrl   String
+  processedUrl  String?          // URL of converted JPEG/PNG
+  thumbnailUrl  String?          // URL of 200x200 thumbnail
+  errorMessage  String?          // Saved if processing fails
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+}
