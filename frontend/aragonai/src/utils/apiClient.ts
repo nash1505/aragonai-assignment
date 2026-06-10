@@ -8,14 +8,13 @@
  * Every error — network, timeout, HTTP 4xx/5xx — is normalized into an `ApiError` shape.
  */
 
-import type { ApiError, UploadResponse } from "../types/api";
-
-// --- Configuration ---
-
-export const API_BASE_URL = "http://localhost:3001";
-
-const DEFAULT_TIMEOUT_MS = 30_000; // 30s for normal requests
-const UPLOAD_TIMEOUT_MS = 120_000; // 120s for uploads (large files)
+import type { ApiError, UploadResponse } from "../types";
+import {
+  API_BASE_URL,
+  API_ROUTES,
+  DEFAULT_TIMEOUT_MS,
+  UPLOAD_TIMEOUT_MS,
+} from "../constants/appConstants";
 
 // --- Error Normalization ---
 
@@ -83,6 +82,9 @@ export async function apiGet<T>(
       throw error; // Already an ApiError
     }
     if (error instanceof DOMException && error.name === "AbortError") {
+      if (options?.signal?.aborted) {
+        throw createApiError("Request was cancelled.");
+      }
       throw createApiError("Request timed out. Please try again.");
     }
     throw createApiError("Network error. Please check your connection and try again.");
@@ -118,6 +120,9 @@ export async function apiDelete<T>(
       throw error;
     }
     if (error instanceof DOMException && error.name === "AbortError") {
+      if (options?.signal?.aborted) {
+        throw createApiError("Request was cancelled.");
+      }
       throw createApiError("Request timed out. Please try again.");
     }
     throw createApiError("Network error. Please check your connection and try again.");
@@ -213,7 +218,7 @@ export function uploadFiles(
     }
 
     // Send
-    xhr.open("POST", `${API_BASE_URL}/api/images/upload`);
+    xhr.open("POST", `${API_BASE_URL}${API_ROUTES.UPLOAD}`);
     xhr.timeout = timeout;
     xhr.send(formData);
   });

@@ -1,13 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import type { ApiError, DeleteResponse } from "../types/api";
+import type { ApiError, DeleteResponse, UseDeleteImageReturn } from "../types";
 import { apiDelete } from "../utils/apiClient";
-
-export interface UseDeleteImageReturn {
-  deleteImage: (id: string) => Promise<DeleteResponse>;
-  isDeleting: boolean;
-  error: ApiError | null;
-  reset: () => void;
-}
 
 export function useDeleteImage(): UseDeleteImageReturn {
   const [isDeleting, setIsDeleting] = useState(false);

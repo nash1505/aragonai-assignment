@@ -1,19 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import type { ApiError, ImageRecord, ImagesListResponse } from "../types/api";
+import type { ApiError, ImageRecord, ImagesListResponse, UseImagesReturn } from "../types";
 import { apiGet } from "../utils/apiClient";
-
-export interface UseImagesReturn {
-  images: ImageRecord[];
-  isLoading: boolean;
-  isLoadingMore: boolean;
-  error: ApiError | null;
-  hasMore: boolean;
-  refetch: () => Promise<void>;
-  loadMore: () => Promise<void>;
-}
-
-const PAGE_LIMIT = 20;
-const POLLING_INTERVAL_MS = 4000; // Poll every 4 seconds if there are pending/processing items
+import { PAGE_LIMIT, POLLING_INTERVAL_MS, API_ROUTES } from "../constants/appConstants";
 
 export function useImages(): UseImagesReturn {
   const [images, setImages] = useState<ImageRecord[]>([]);
@@ -24,6 +12,7 @@ export function useImages(): UseImagesReturn {
 
   const isMountedRef = useRef(true);
   const pollingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const fetchAbortControllerRef = useRef<AbortController | null>(null);
 
   // Keep track of the current cursor to prevent race conditions during pagination
   const nextCursorRef = useRef<string | null>(null);
@@ -36,6 +25,7 @@ export function useImages(): UseImagesReturn {
       if (pollingTimerRef.current) {
         clearInterval(pollingTimerRef.current);
       }
+      fetchAbortControllerRef.current?.abort();
     };
   }, []);
 
@@ -49,8 +39,16 @@ export function useImages(): UseImagesReturn {
     }
     setError(null);
 
+    // Cancel any in-flight initial fetch request
+    fetchAbortControllerRef.current?.abort();
+    const controller = new AbortController();
+    fetchAbortControllerRef.current = controller;
+
     try {
-      const data = await apiGet<ImagesListResponse>(`/api/images?limit=${PAGE_LIMIT}`);
+      const data = await apiGet<ImagesListResponse>(
+        `${API_ROUTES.IMAGES}?limit=${PAGE_LIMIT}`,
+        { signal: controller.signal }
+      );
       
       if (isMountedRef.current) {
         setImages(data.images);
@@ -58,6 +56,16 @@ export function useImages(): UseImagesReturn {
         setIsLoading(false);
       }
     } catch (err: unknown) {
+      // Ignore manual aborts / cancellations
+      if (err instanceof DOMException && err.name === "AbortError") {
+        return;
+      }
+      if (err && typeof err === "object" && "message" in err) {
+        if ((err as any).message === "Request was cancelled.") {
+          return;
+        }
+      }
+
       if (isMountedRef.current) {
         const apiError =
           err && typeof err === "object" && "message" in err
@@ -82,7 +90,7 @@ export function useImages(): UseImagesReturn {
 
     try {
       const data = await apiGet<ImagesListResponse>(
-        `/api/images?limit=${PAGE_LIMIT}&cursor=${cursor}`
+        `${API_ROUTES.IMAGES}?limit=${PAGE_LIMIT}&cursor=${cursor}`
       );
 
       if (isMountedRef.current) {

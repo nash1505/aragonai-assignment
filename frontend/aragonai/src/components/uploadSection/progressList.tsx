@@ -1,13 +1,5 @@
 import React from "react";
-
-export interface UploadProgressItem {
-  id: string;
-  name: string;
-  progress: number;
-  size: string;
-  status: "uploading" | "success" | "failed" | "rejected";
-  error?: string;
-}
+import type { UploadProgressItem } from "../../types";
 
 interface ProgressListProps {
   items: UploadProgressItem[];

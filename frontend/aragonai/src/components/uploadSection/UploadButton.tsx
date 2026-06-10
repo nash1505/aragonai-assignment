@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import type { UploadFormValues } from "../../types/api";
+import type { UploadFormValues } from "../../types";
+import { UI_COPY, ALLOWED_EXTENSIONS } from "../../constants/appConstants";
 
 interface UploadButtonProps {
   onFilesSelected: (files: File[]) => void;
@@ -67,6 +68,10 @@ export const UploadButton: React.FC<UploadButtonProps> = ({
     fileInputRef.current?.click();
   };
 
+  // Build the file pick accept string using ALLOWED_EXTENSIONS
+  const acceptString = ALLOWED_EXTENSIONS.map(ext => `.${ext}`).join(",") + 
+                       ",image/png,image/jpeg,image/heic,image/heif";
+
   return (
     <div className="w-full max-w-xl mx-auto">
       {/* Error Alert */}
@@ -131,7 +136,7 @@ export const UploadButton: React.FC<UploadButtonProps> = ({
             }}
             type="file"
             multiple
-            accept=".png,.jpeg,.heic,image/png,image/jpeg,image/heic,image/heif"
+            accept={acceptString}
             className="hidden"
             id="file-upload"
           />
@@ -195,12 +200,12 @@ export const UploadButton: React.FC<UploadButtonProps> = ({
 
           {/* Click to upload or drag and drop */}
           <p className="mt-5 text-base font-semibold text-slate-800 text-center tracking-tight">
-            Click to upload or drag and drop
+            {UI_COPY.UPLOAD_BUTTON.PROMPT}
           </p>
 
           {/* File Formats & Max Size */}
           <p className="mt-1 text-xs text-slate-500 text-center tracking-wide font-medium">
-            PNG, JPEG, HEIC up to 120MB
+            {UI_COPY.UPLOAD_BUTTON.LIMITS}
           </p>
         </div>
       </form>

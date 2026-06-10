@@ -1,40 +1,7 @@
-/**
- * Hook for uploading images to the backend.
- *
- * Provides a mutation-style API with real XHR progress tracking,
- * client-side validation, and abort support on unmount.
- *
- * Usage:
- *   const { upload, isUploading, progress, error, lastResult, reset } = useUploadImages();
- *   const result = await upload(files);
- */
-
 import { useState, useRef, useCallback, useEffect } from "react";
-import type { ApiError, UploadResponse, FileValidationResult } from "../types/api";
+import type { ApiError, UploadResponse, FileValidationResult, UseUploadImagesReturn } from "../types";
 import { validateFiles } from "../utils/fileValidation";
 import { uploadFiles } from "../utils/apiClient";
-
-export interface UseUploadImagesReturn {
-  /**
-   * Validates and uploads an array of files.
-   * Returns the validation result (including rejected files) and the server response.
-   * Throws if ALL files are rejected by validation or the upload fails entirely.
-   */
-  upload: (files: File[]) => Promise<{
-    validation: FileValidationResult;
-    response: UploadResponse | null;
-  }>;
-  /** True while an upload XHR is in-flight */
-  isUploading: boolean;
-  /** Upload progress 0–100 from XHR */
-  progress: number;
-  /** Last API or network error, null when clear */
-  error: ApiError | null;
-  /** Last successful upload response */
-  lastResult: UploadResponse | null;
-  /** Reset error and progress state */
-  reset: () => void;
-}
 
 export function useUploadImages(): UseUploadImagesReturn {
   const [isUploading, setIsUploading] = useState(false);
