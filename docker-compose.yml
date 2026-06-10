@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: aragon-postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: aragon_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d aragon_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: aragon-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aragon-backend
+    restart: always
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    env_file:
+      - ./backend/.env
+    environment:
+      - PORT=3001
+      - DATABASE_URL=postgresql://postgres:admin@db:5432/aragon_db?schema=public
+      - REDIS_URL=redis://redis:6379
+    command: sh -c "npx prisma db push && npm run dev"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  frontend:
+    build:
+      context: ./frontend/aragonai
+      dockerfile: Dockerfile
+    container_name: aragon-frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/aragonai:/app
+      - /app/node_modules
+    environment:
+      - VITE_BACKEND_URL=http://localhost:3001
+      - VITE_APP_URL=http://localhost:5173
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  redisdata:
